@@ -137,11 +137,11 @@ const columns = [
       if (type === "complaint") {
         badgeVariant = "destructive"
       } else if (type === "suggestion") {
-        badgeVariant = "secondary"
+        badgeVariant = "default"
       } else if (type === "question") {
-        badgeVariant = "warning"
+        badgeVariant = "destructive"
       } else if (type === "praise") {
-        badgeVariant = "success"
+        badgeVariant = "outline"
       }
 
       return <Badge variant={badgeVariant as any}>{type}</Badge>
@@ -164,11 +164,11 @@ const columns = [
       let badgeVariant = "outline"
 
       if (status === "new") {
-        badgeVariant = "secondary"
+        badgeVariant = "default"
       } else if (status === "in-progress") {
-        badgeVariant = "warning"
+        badgeVariant = "destructive"
       } else if (status === "resolved") {
-        badgeVariant = "success"
+        badgeVariant = "outline"
       }
 
       return <Badge variant={badgeVariant as any}>{status}</Badge>
@@ -210,10 +210,10 @@ const columns = [
                     row.original.type === "complaint"
                       ? "destructive"
                       : row.original.type === "suggestion"
-                        ? "secondary"
+                        ? "default"
                         : row.original.type === "question"
-                          ? "warning"
-                          : "success"
+                          ? "destructive"
+                          : "outline"
                   }
                 >
                   {row.original.type}
@@ -224,8 +224,8 @@ const columns = [
                     row.original.status === "new"
                       ? "default"
                       : row.original.status === "in-progress"
-                        ? "warning"
-                        : "success"
+                        ? "destructive"
+                        : "outline"
                   }
                 >
                   {row.original.status}
