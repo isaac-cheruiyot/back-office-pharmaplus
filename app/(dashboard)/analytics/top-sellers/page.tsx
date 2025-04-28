@@ -154,7 +154,7 @@ export default function TopSellersPage() {
           <CardContent>
             <div className="flex items-center justify-between">
               <div className="text-2xl font-bold">$156,240</div>
-              <Badge variant="success" className="flex items-center">
+              <Badge variant="default" className="flex items-center">
                 <ArrowUpRight className="mr-1 h-3 w-3" />
                 8.2%
               </Badge>
@@ -170,7 +170,7 @@ export default function TopSellersPage() {
           <CardContent>
             <div className="flex items-center justify-between">
               <div className="text-2xl font-bold">7,842</div>
-              <Badge variant="success" className="flex items-center">
+              <Badge variant="default" className="flex items-center">
                 <ArrowUpRight className="mr-1 h-3 w-3" />
                 5.3%
               </Badge>
@@ -186,7 +186,7 @@ export default function TopSellersPage() {
           <CardContent>
             <div className="flex items-center justify-between">
               <div className="text-2xl font-bold">$42.85</div>
-              <Badge variant="success" className="flex items-center">
+              <Badge variant="default" className="flex items-center">
                 <ArrowUpRight className="mr-1 h-3 w-3" />
                 2.7%
               </Badge>
@@ -202,7 +202,7 @@ export default function TopSellersPage() {
           <CardContent>
             <div className="flex items-center justify-between">
               <div className="text-2xl font-bold">3.42%</div>
-              <Badge variant="success" className="flex items-center">
+              <Badge variant="default" className="flex items-center">
                 <ArrowUpRight className="mr-1 h-3 w-3" />
                 0.5%
               </Badge>
@@ -262,7 +262,7 @@ export default function TopSellersPage() {
                       </div>
                       <div className="w-16 text-right">
                         <Badge
-                          variant={product.growth >= 0 ? "success" : "destructive"}
+                          variant={product.growth >= 0 ? "default" : "destructive"}
                           className="flex items-center justify-center"
                         >
                           {product.growth >= 0 ? <TrendingUp className="mr-1 h-3 w-3" /> : null}
@@ -296,7 +296,7 @@ export default function TopSellersPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="text-sm font-medium">{category.percentage}%</div>
-                        <Badge variant={category.growth >= 0 ? "success" : "destructive"} className="flex items-center">
+                        <Badge variant={category.growth >= 0 ? "default" : "destructive"} className="flex items-center">
                           {category.growth >= 0 ? <TrendingUp className="mr-1 h-3 w-3" /> : null}
                           {category.growth}%
                         </Badge>

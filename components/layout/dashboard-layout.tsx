@@ -50,6 +50,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       icon: ShoppingCart,
       children: [
         { name: "All Orders", href: "/orders" },
+        { name: "In Transt Orders", href: "/orders/intransit-orders" },
         { name: "Cancelled/Returned", href: "/orders/cancelled" },
       ],
     },

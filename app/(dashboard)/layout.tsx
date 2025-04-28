@@ -1,6 +1,11 @@
-import type React from "react"
-import { DashboardLayout } from "@/components/layout/dashboard-layout"
+import type React from "react";
+import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { OrderProvider } from "@/context/OrderContext";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  return <DashboardLayout>{children}</DashboardLayout>
+  return (
+    <OrderProvider>
+      <DashboardLayout>{children}</DashboardLayout>
+    </OrderProvider>
+  );
 }
