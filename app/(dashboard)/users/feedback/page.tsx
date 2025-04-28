@@ -222,7 +222,7 @@ const columns = [
                 <Badge
                   variant={
                     row.original.status === "new"
-                      ? "secondary"
+                      ? "default"
                       : row.original.status === "in-progress"
                         ? "warning"
                         : "success"
