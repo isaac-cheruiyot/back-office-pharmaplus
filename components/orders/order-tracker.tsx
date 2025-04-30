@@ -99,7 +99,7 @@ const OrderTracker = ({ order, steps }: OrderTrackerProps) => {
             <div className="ml-3 mb-6">
               <div
                 className={`text-sm font-semibold ${
-                  isCompleted || isCurrent ? 'text-primary' : isUpcoming ? 'text-gray-400' : ''
+                  isCompleted || isCurrent ? 'text-black' : isUpcoming ? 'text-gray-400' : ''
                 }`}
               >
                 {step.title}

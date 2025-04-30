@@ -51,7 +51,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       children: [
         { name: "All Orders", href: "/orders" },
         { name: "In Transt Orders", href: "/orders/intransit-orders" },
-        { name: "Cancelled/Returned", href: "/orders/cancelled" },
+        { name: "Cancelled", href: "/orders/cancelled" },
       ],
     },
     {
@@ -78,16 +78,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         { name: "Discounts", href: "/payments/discounts" },
       ],
     },
-    {
-      name: "Users",
-      href: "/users",
-      icon: Users,
-      children: [
-        { name: "User Accounts", href: "/users" },
-        { name: "Addresses", href: "/users/addresses" },
-        { name: "Feedback Log", href: "/users/feedback" },
-      ],
-    },
+   
     {
       name: "Prescriptions",
       href: "/prescriptions",
@@ -120,10 +111,16 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       icon: Brain,
     },
     {
-      name: "Customer Support",
-      href: "/support",
-      icon: MessageSquare,
+      name: "Users",
+      href: "/users",
+      icon: Users,
+      children: [
+        { name: "User Accounts", href: "/users" },
+        { name: "Addresses", href: "/users/addresses" },
+        { name: "Feedback Log", href: "/users/feedback" },
+      ],
     },
+   
   ]
 
   // Initialize expanded items based on current path

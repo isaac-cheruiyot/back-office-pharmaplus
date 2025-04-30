@@ -34,7 +34,6 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const basicPass = process.env.NEXT_PUBLIC_BASIC_AUTH_PASS!
       const authHeader = `Basic ${btoa(`${basicUser}:${basicPass}`)}`
 
-      console.log('Fetching orders with auth:', { basicUser, basicPass })
 
       const res = await fetch(
         `https://web.pharmaplus.co.ke/datapool/read_ecommerce_orders/fetch?&page=0&size=50`,
@@ -45,27 +44,22 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
       )
 
-      console.log('API Response status:', res.status)
       const data = await res.json()
-      console.log('API Response data:', data)
 
       if (!res.ok) throw new Error('Failed to fetch orders.')
 
       if (Array.isArray(data.content)) {
-        console.log('Processing orders:', data.content.length)
         data.content.forEach((order: any) => {
           const orderId = order.header.id
           const header: Header = order.header
           const details: Detail[] = order.details
           const payment: Payment = order.payment
           
-          console.log('Adding order:', { orderId, header, details, payment })
           orderManager.addOrder(orderId, header, details, payment)
         })
 
         // Log the current state of orders after adding
         const currentOrders = orderManager.getAllHeaders()
-        console.log('Current orders in manager:', currentOrders)
       } else {
         console.error('Invalid data format:', data)
         setError('No orders found or incorrect data format')

@@ -44,7 +44,7 @@ export default function AIPage() {
                       <AvatarFallback>AI</AvatarFallback>
                     </Avatar>
                     <div className="bg-muted rounded-lg p-3 flex-1">
-                      <p className="text-sm">Hello! I'm your PharmaPlus AI assistant. How can I help you today?</p>
+                      <p className="text-sm">Hello! I&apos;m your PharmaPlus AI assistant. How can I help you today?</p>
                     </div>
                   </div>
 
@@ -64,7 +64,7 @@ export default function AIPage() {
                       <AvatarFallback>AI</AvatarFallback>
                     </Avatar>
                     <div className="bg-muted rounded-lg p-3 flex-1">
-                      <p className="text-sm">Based on the current month's data, your top selling products are:</p>
+                      <p className="text-sm">Based on the current month&apos;s data, your top selling products are:</p>
                       <ol className="list-decimal list-inside mt-2 space-y-1 text-sm">
                         <li>Vitamin C Complex (1,245 units)</li>
                         <li>Omega-3 Fish Oil (982 units)</li>
@@ -220,7 +220,7 @@ export default function AIPage() {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm">Searches for "immune support" have increased by 43% in the last 30 days.</p>
+                    <p className="text-sm">Searches for &quot;immune support&quot; have increased by 43% in the last 30 days.</p>
                   </CardContent>
                   <CardFooter className="pt-0">
                     <Button variant="outline" size="sm" className="w-full">

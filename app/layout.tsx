@@ -9,6 +9,9 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "PharmaPlus Dashboard",
   description: "Ecommerce dashboard for PharmaPlus, a chain of pharmacies based in Kenya",
+  icons: {
+    icon: "/logo/logo-mini.svg",
+  },
 }
 
 export default function RootLayout({

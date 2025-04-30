@@ -2,7 +2,6 @@
 import { Order, Header, Detail, Payment, InTransitOrder, ProductDetailsMap } from '@/types/Order';
 
 
-// Normal Orders Manager
 export class OrderManager {
   private orderMap: Record<number, Order>;
 
@@ -18,6 +17,10 @@ export class OrderManager {
     return Object.values(this.orderMap).map(order => order.header);
   }
 
+  getAllPayments(): Order[] {
+    return Object.values(this.orderMap).map(order => order);
+  }
+
   getHeaderByOrderId(orderId: number): Header | undefined {
     return this.orderMap[orderId]?.header;
   }
@@ -25,32 +28,58 @@ export class OrderManager {
   getDetailsByOrderId(orderId: number): Detail[] | undefined {
     return this.orderMap[orderId]?.details;
   }
-  
 
   getPaymentByOrderId(orderId: number): Payment | undefined {
     return this.orderMap[orderId]?.payment;
   }
 
-
-  // New method to cancel an order
   cancelOrder(orderId: number): string {
     const order = this.orderMap[orderId];
+    if (!order) return 'Order not found.';
 
-    if (!order) {
-      return 'Order not found.';
-    }
-
-    if (order.header.status_description === 'Delivered' || order.header.status_description === 'Received') {
+    const status = order.header.status_description;
+    if (status === 'Delivered' || status === 'Received') {
       return 'This order cannot be cancelled as it has already been delivered or received.';
     }
 
-    // Change the order status to "Cancelled by Customer"
     order.header.status_description = 'Cancelled by Customer';
-    
     return 'Order has been successfully cancelled.';
   }
 
+  // ✅ Filter orders by payment amount (min and/or max)
+  filterByPaymentAmount(min?: number, max?: number): Order[] {
+    return Object.values(this.orderMap).filter(order => {
+      const amount = order.payment.total_order_amount;
+      if (min != null && amount < min) return false;
+      if (max != null && amount > max) return false;
+      return true;
+    });
+  }
+
+  // ✅ Filter orders by payment type
+  filterByPaymentType(type: string): Order[] {
+    return Object.values(this.orderMap).filter(order =>
+      order.payment.payment_type.toLowerCase() === type.toLowerCase()
+    );
+  }
+
+  // ✅ Filter orders by payment date range
+  filterByDateRange(startDate: Date, endDate: Date): Order[] {
+    return Object.values(this.orderMap).filter(order => {
+      const paymentDate = new Date(order.header.modified_at);
+      return paymentDate >= startDate && paymentDate <= endDate;
+    });
+  }
+
+  // ✅ Filter orders by payment status
+  filterByPaymentStatus(status: string): Order[] {
+    return Object.values(this.orderMap).filter(order =>
+      order.payment.payment_status.toLowerCase() === status.toLowerCase()
+    );
+  }
 }
+
+
 
 // start of intransit order Manager
 

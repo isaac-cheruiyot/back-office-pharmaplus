@@ -13,16 +13,37 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 export default function DashboardOrders() {
   const { orderManager, fetchOrders, loading, error } = useOrderManager()
   const orders = orderManager.getAllHeaders()
+
+  const [paginatedOrders, setPaginatedOrders] = useState<any[]>([]);
   const [isModalOpen, setModalOpen] = useState(false)
   const [cancelError, setCancelError] = useState<string | null>(null)
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null)
   const [orderToCancel, setOrderToCancel] = useState<number | null>(null)
   const [paymentMethod, setPaymentMethod] = useState("all")
   const [location, setLocation] = useState("all")
+  const [page, setPage] = useState(1);
+const [hasMore, setHasMore] = useState(true);
+
+useEffect(() => {
+  fetchOrders();
+}, []);
+
+  
 
   useEffect(() => {
-    fetchOrders()
-  }, [])
+    const handleScroll = () => {
+      const nearBottom =
+        window.innerHeight + window.scrollY >= document.body.offsetHeight - 100;
+  
+      if (nearBottom && hasMore && !loading) {
+        setPage(prev => prev + 1);
+      }
+    };
+  
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [hasMore, loading]);
+  
 
   const handleCancelOrder = (orderId: number) => {
     const order = orders.find(o => o.id === orderId)
@@ -69,24 +90,13 @@ export default function DashboardOrders() {
   })
 
   const groupedOrders = {
-    all: filteredOrders,
+    all: filteredOrders.sort((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime()),
     received: filteredOrders.filter((o) => o.status_description.includes("Received")),
     processing: filteredOrders.filter((o) => o.status_description.includes("Processing")),
     delivered: filteredOrders.filter((o) => o.status_description === "Delivered"),
   }
 
-  const handleViewOrder = (orderId: number) => {
-    const header = orderManager.getHeaderByOrderId(orderId)
-    const details = orderManager.getDetailsByOrderId(orderId)
-    const payment = orderManager.getPaymentByOrderId(orderId)
-
-    setSelectedOrder({
-      id: orderId,
-      header,
-      details,
-      payment,
-    })
-  }
+ 
 
   const renderOrders = (list: typeof orders) => {
     if (!list.length)
@@ -175,14 +185,14 @@ export default function DashboardOrders() {
                           </p>
                           <ul className="list-inside mt-2 space-y-2">
                             {details?.map((item: any, index: number) => (
-                              <li key={index} className="grid md:flex p-2 bg-gray-100 rounded item-center justify-between">
+                              <li key={index} className="grid md:grid-cols-5 p-2 bg-gray-100 rounded item-center justify-between">
                                 <p>{item.product_id} </p>
-                                <p className="font-semibold text-gray-700">{item.item_name}</p>
-                                <div className="flex gap-2">
+                                <p className="font-semibold md:col-span-2 text-gray-700">{item.item_name}</p>
+                                <div className="flex gap-2 ">
                                   <p><strong>Unit price</strong>: Ksh{item.unit_price} </p> *
                                   <p>{item.qty}</p>
                                 </div>
-                                <p className="font-bold text-lg float-end"> Ksh {item.sub_total}</p>
+                                <p className="font-bold text-end text-lg float-end"> Ksh {item.sub_total}</p>
                               </li>
                             ))}
                           </ul>
@@ -225,6 +235,8 @@ export default function DashboardOrders() {
           )
         })}
 
+        {loading && <p className="text-center text-gray-500">Loading more orders...</p>}
+        {!hasMore && <p className="text-center text-gray-400">No more orders to load.</p>}
         {isModalOpen && <Modal onClose={() => setModalOpen(false)} />}
       </div>
     )
@@ -374,6 +386,8 @@ export default function DashboardOrders() {
             </Card>
           </TabsContent>
         </Tabs>
+        
+        
       )}
     </div>
   )
