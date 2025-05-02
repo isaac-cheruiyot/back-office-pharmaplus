@@ -15,7 +15,7 @@ const AddTopic = () => {
     // Function to fetch categories based on search term
     const fetchCategories = async (search: string) => {
         try {
-            const response = await axios.get(`https://web.pharmaplus.co.ke/ecmws/read_top_categories/fetch`, {
+            const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/read_top_categories/fetch`, {
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Basic ${btoa(`${username}:${password}`)}`,

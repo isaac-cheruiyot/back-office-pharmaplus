@@ -1,7 +1,7 @@
 // context/BlogContext.tsx
 "use client"
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { BlogPost } from '@/types/blog';
+import { Blog } from '@/types/blog';
 import { BlogManager } from '@/lib/BlogManager';
 import { initializeBlogManager } from '@/lib/initBlogManager';
 import axios from 'axios';
@@ -28,7 +28,7 @@ export const BlogProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const fetchBlogs = async () => {
       try {
-        const { data } = await axios.get<BlogPost[]>( `${process.env.NEXT_PUBLIC_API_BASE_URL}/read_blogs/fetch`,
+        const { data } = await axios.get<Blog[]>( `${process.env.NEXT_PUBLIC_API_BASE_URL}/read_blogs/fetch`,
         {
           headers: {
             "Content-Type": "application/json",

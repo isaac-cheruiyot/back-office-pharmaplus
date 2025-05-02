@@ -1,4 +1,4 @@
-export interface BlogPost {
+export interface Blog {
     id: number;
     topic_id: number;
     topic: string;

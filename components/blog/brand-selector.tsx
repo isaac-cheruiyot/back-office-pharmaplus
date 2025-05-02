@@ -46,6 +46,28 @@ export function BrandSelector({ form }: { form: UseFormReturn<BlogFormValues> })
       })
   }, [])
 
+  // saved in local storage
+  useEffect(() => {
+    const savedBrands = localStorage.getItem("selectedBrands")
+    if (savedBrands) {
+      const parsed = JSON.parse(savedBrands)
+      if (Array.isArray(parsed)) {
+        form.setValue("brands", parsed)
+      }
+    }
+  }, [form])
+
+  useEffect(() => {
+    const subscription = form.watch((values) => {
+      if (Array.isArray(values.brands)) {
+        localStorage.setItem("selectedBrands", JSON.stringify(values.brands))
+      }
+    })
+  
+    return () => subscription.unsubscribe()
+  }, [form])
+  
+
   // Filter brands based on search
   useEffect(() => {
     if (searchQuery) {

@@ -1,20 +1,15 @@
+"use client "
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
-import type { UseFormReturn } from "react-hook-form";
 import { Search, X } from "lucide-react";
-import type { BlogFormValues } from "./blog-post-form";
-import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-} from "@/components/ui/form";
+import { FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Product, ProductList } from "@/types/products";
 import { Card } from "../ui/card";
+import { BlogFormValues } from "./blog-post-form";
+import { UseFormReturn } from "react-hook-form";
 
 export function ProductSelector({
   form,
@@ -22,22 +17,28 @@ export function ProductSelector({
   form: UseFormReturn<BlogFormValues>;
 }) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]); // Correctly type filtered products
+  const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [showResults, setShowResults] = useState(false);
-
-  // Set initial products state to an empty array
-  const [selectedProducts, setSelectedProducts] = useState<Product[]>([]); // Correctly type selected products
-
+  const [selectedProducts, setSelectedProducts] = useState<Product[]>(() => {
+  const storedProducts = localStorage.getItem("selectedProducts");
+  return storedProducts ? JSON.parse(storedProducts) : [];
+  });
+  
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const resultsRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  
+  const [focusedIndex, setFocusedIndex] = useState(-1);
+  const [scrollPosition, setScrollPosition] = useState(0); // To track scroll position
 
   const username = process.env.NEXT_PUBLIC_BASIC_AUTH_USER || "";
   const password = process.env.NEXT_PUBLIC_BASIC_AUTH_PASS || "";
 
-  // Fetch products from API
   useEffect(() => {
     axios
       .get<ProductList>(
-        "https://web.pharmaplus.co.ke/ecmws/read_products/fetch",
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/read_products/fetch`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -47,7 +48,8 @@ export function ProductSelector({
       )
       .then((response) => {
         if (response.data.content) {
-          setFilteredProducts(response.data.content); // Set the product list
+          setProducts(response.data.content);
+          setFilteredProducts(response.data.content);
         }
       })
       .catch((error) => {
@@ -55,38 +57,37 @@ export function ProductSelector({
       });
   }, []);
 
-  // Handle search query and filtering products
   useEffect(() => {
-    if (searchQuery) {
-      setFilteredProducts((prevProducts) =>
-        prevProducts.filter(
+    if (searchQuery.trim()) {
+      setFilteredProducts(
+        products.filter(
           (product) =>
-            product.item_name
-              .toLowerCase()
-              .includes(searchQuery.toLowerCase()) ||
-            product.product_code
-              .toLowerCase()
-              .includes(searchQuery.toLowerCase())
+            product.item_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            product.product_code.toLowerCase().includes(searchQuery.toLowerCase())
         )
       );
+    } else {
+      setFilteredProducts(products); // reset to full list when search is cleared
     }
-  }, [searchQuery]);
+  }, [searchQuery, products]);
 
-  // Close results when clicking outside the input
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
         wrapperRef.current &&
         !wrapperRef.current.contains(event.target as Node)
       ) {
-        setShowResults(false);
+        setShowResults(false); // Close dropdown
       }
     };
+  
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
+  
 
-  // Select product
   const handleSelectProduct = (productCode: string) => {
     const selectedProduct = filteredProducts.find(
       (product) => product.product_code === productCode
@@ -95,17 +96,64 @@ export function ProductSelector({
       selectedProduct &&
       !selectedProducts.some((product) => product.product_code === productCode)
     ) {
-      setSelectedProducts((prevProducts) => [...prevProducts, selectedProduct]);
+      const updatedSelectedProducts = [...selectedProducts, selectedProduct];
+      setSelectedProducts(updatedSelectedProducts);
+      localStorage.setItem("selectedProducts", JSON.stringify(updatedSelectedProducts));
+
+      // Update the form value with the selected product codes
+      const currentProductCodes = form.getValues("product_codes");
+      form.setValue("product_codes", [...currentProductCodes, productCode]);
     }
     setSearchQuery("");
     setShowResults(false);
   };
 
-  // Remove product from selection
   const handleRemoveProduct = (productCode: string) => {
-    setSelectedProducts((prevProducts) =>
-      prevProducts.filter((product) => product.product_code !== productCode)
+    const updatedSelectedProducts = selectedProducts.filter(
+      (product) => product.product_code !== productCode
     );
+    setSelectedProducts(updatedSelectedProducts);
+    localStorage.setItem("selectedProducts", JSON.stringify(updatedSelectedProducts));
+
+    // Update the form value after product is removed
+    const currentProductCodes = form.getValues("product_codes");
+    form.setValue(
+      "product_codes",
+      currentProductCodes.filter((code) => code !== productCode)
+    );
+  };
+
+  // Keyboard navigation handlers
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "ArrowDown") {
+      setFocusedIndex((prevIndex) => {
+        const nextIndex = Math.min(filteredProducts.length - 1, prevIndex + 1);
+        return nextIndex;
+      });
+    } else if (e.key === "ArrowUp") {
+      setFocusedIndex((prevIndex) => Math.max(0, prevIndex - 1));
+    } else if (e.key === "Enter" && focusedIndex !== -1) {
+      const selectedProduct = filteredProducts[focusedIndex];
+      handleSelectProduct(selectedProduct.product_code);
+    }
+  };
+
+  useEffect(() => {
+    if (focusedIndex >= 0 && resultsRef.current) {
+      const focusedElement = resultsRef.current.children[focusedIndex];
+      if (focusedElement) {
+        focusedElement.scrollIntoView({
+          behavior: "smooth",
+          block: "nearest",
+        });
+      }
+    }
+  }, [focusedIndex]);
+
+  const handleScroll = () => {
+    if (scrollRef.current) {
+      setScrollPosition(scrollRef.current.scrollTop); // Track scroll position
+    }
   };
 
   return (
@@ -127,6 +175,7 @@ export function ProductSelector({
                       setShowResults(true);
                     }}
                     onFocus={() => setShowResults(true)}
+                    onKeyDown={handleKeyDown} // Attach keyboard event listener
                     className="w-full"
                   />
                   <Button
@@ -134,7 +183,8 @@ export function ProductSelector({
                     size="icon"
                     className="absolute right-0"
                     onClick={() => {
-                      setSearchQuery("");
+                      setSearchQuery(""); // Reset searchQuery
+                      setFilteredProducts([]); // Reset filtered products to empty
                       setShowResults(false);
                     }}
                   >
@@ -147,20 +197,31 @@ export function ProductSelector({
                 </div>
 
                 {showResults && (
-                  <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-md">
-                    <ScrollArea className="h-[200px]">
+                  <div
+                    className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-md"
+                    ref={resultsRef}
+                  >
+                    <ScrollArea
+                      className="h-[200px]"
+                      ref={scrollRef}
+                      onScroll={handleScroll} // Track scroll
+                    >
+                      <div ref={resultsRef}>
                       {filteredProducts.length > 0 ? (
-                        filteredProducts.map((product) => (
+                        filteredProducts.map((product, index) => (
                           <div
                             key={product.product_code}
-                            className="p-2 hover:bg-muted cursor-pointer"
+                            className={`p-2 hover:bg-muted cursor-pointer ${
+                              focusedIndex === index ? "bg-muted" : ""
+                            }`}
                             onClick={() =>
                               handleSelectProduct(product.product_code)
                             }
+                            ref={resultsRef}
+                            onMouseEnter={() => setFocusedIndex(index)} // Change focus on mouse enter
                           >
-                            <div className="font-medium">{product.name}</div>
+                            <div className="font-medium">{product.item_name}</div>
                             <div className="text-xs text-muted-foreground flex justify-between">
-                              <span>{product.category}</span>
                               <span>{product.product_code}</span>
                             </div>
                           </div>
@@ -170,6 +231,7 @@ export function ProductSelector({
                           No products found
                         </div>
                       )}
+                      </div>
                     </ScrollArea>
                   </div>
                 )}
@@ -180,9 +242,8 @@ export function ProductSelector({
                   {selectedProducts.map((product) => (
                     <Card
                       key={product.product_code}
-                      className="p-2 relative gap-4 w-full border-primary grid grid-cols-6 "
+                      className="p-2 relative gap-4 w-full border-primary grid grid-cols-6"
                     >
-                        {/* product image */}
                       <div className="overflow-hidden rounded-sm shadow">
                         <img
                           src={product.image_urls[0]}
@@ -190,19 +251,13 @@ export function ProductSelector({
                           className="product-image h-20 w-20 object-contain bg-gray-50"
                         />
                       </div>
-                      {/* product desc */}
                       <div className="col-span-4">
-                        {/* Product name */}
                         <span className="mr-1 font-semibold">
                           {product.item_name}
                         </span>
-
-                        {/* Product description */}
                         <p className="line-clamp-1 text-xs pt-1 text-gray-500">
                           {product.description}
                         </p>
-
-                        {/* Price and stock status */}
                         <p className="text-sm pt-1 text-gray-800">
                           Price:{" "}
                           <span className="font-bold">${product.price}</span>

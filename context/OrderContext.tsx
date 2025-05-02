@@ -43,6 +43,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           },
         }
       )
+      
 
       const data = await res.json()
 
@@ -83,7 +84,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const user = JSON.parse(localStorage.getItem('user') || '{}')
 
       const res = await fetch(
-        `https://web.pharmaplus.co.ke/ecmws/read_customer_in_transit_orders/fetch?&size=50`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/read_customer_in_transit_orders/fetch?&size=50`,
         {
           headers: {
             Authorization: authHeader,

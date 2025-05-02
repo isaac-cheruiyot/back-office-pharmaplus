@@ -1,10 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { useState, useEffect, useCallback } from "react"
 import type { UseFormReturn } from "react-hook-form"
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import type { BlogFormValues } from "./blog-post-form"
+import { useToast } from "@/hooks/use-toast"
 
 // Direct imports instead of using the index file
 import { useEditor, EditorContent } from "@tiptap/react"
@@ -12,11 +14,95 @@ import StarterKit from "@tiptap/starter-kit"
 import Link from "@tiptap/extension-link"
 import Image from "@tiptap/extension-image"
 import Placeholder from "@tiptap/extension-placeholder"
-import { Bold, Italic, LinkIcon, List, ListOrdered, ImageIcon } from "lucide-react"
+import { Bold, Italic, LinkIcon, List, ListOrdered, ImageIcon, Save } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
-export function BlogContentEditor({ form }: { form: UseFormReturn<BlogFormValues> }) {
+// Debounce function to limit how often we save to localStorage
+function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (...args: Parameters<T>) => void {
+  let timeout: ReturnType<typeof setTimeout> | null = null
+
+  return (...args: Parameters<T>) => {
+    const later = () => {
+      timeout = null
+      func(...args)
+    }
+
+    if (timeout !== null) {
+      clearTimeout(timeout)
+    }
+    timeout = setTimeout(later, wait)
+  }
+}
+
+const STORAGE_KEY = "blog-post-draft"
+
+export function BlogContentEditor({
+  form,
+}: {
+  form: UseFormReturn<BlogFormValues>
+}) {
+  const { toast } = useToast()
   const [content, setContent] = useState(form.getValues().content || "")
+  const [ready, setReady] = useState(false)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [urlType, setUrlType] = useState<"link" | "image">("link")
+  const [urlInput, setUrlInput] = useState("")
+  const [lastSaved, setLastSaved] = useState<Date | null>(null)
+
+  // Save form data to localStorage
+  const saveToLocalStorage = useCallback(() => {
+    try {
+      const formData = form.getValues()
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(formData))
+      setLastSaved(new Date())
+    } catch (error) {
+      console.error("Failed to save to localStorage:", error)
+    }
+  }, [form])
+
+  // Debounced version of saveToLocalStorage
+  const debouncedSave = useCallback(
+    debounce(() => saveToLocalStorage(), 1000),
+    [saveToLocalStorage],
+  )
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    try {
+      const savedData = localStorage.getItem(STORAGE_KEY)
+      if (savedData) {
+        const parsedData = JSON.parse(savedData) as BlogFormValues
+
+        // Only restore if the form is empty or matches the saved data
+        if (!form.getValues().title && !form.getValues().content) {
+          form.reset(parsedData)
+          setContent(parsedData.content || "")
+          toast({
+            title: "Draft restored",
+            description: "Your previous draft has been loaded",
+          })
+        }
+      }
+    } catch (error) {
+      console.error("Failed to load from localStorage:", error)
+    }
+  }, [form, toast])
+
+  // Save to localStorage when content changes
+  useEffect(() => {
+    if (content) {
+      debouncedSave()
+    }
+  }, [content, debouncedSave])
+
+  // Manual save function
+  const handleManualSave = () => {
+    saveToLocalStorage()
+    toast({
+      title: "Draft saved",
+      description: "Your draft has been saved locally",
+    })
+  }
 
   const editor = useEditor({
     extensions: [
@@ -40,6 +126,7 @@ export function BlogContentEditor({ form }: { form: UseFormReturn<BlogFormValues
     onUpdate: ({ editor }) => {
       const html = editor.getHTML()
       form.setValue("content", html, { shouldValidate: true })
+      setContent(html)
     },
     editorProps: {
       attributes: {
@@ -50,41 +137,65 @@ export function BlogContentEditor({ form }: { form: UseFormReturn<BlogFormValues
 
   const handleLinkClick = () => {
     if (!editor) return
-
     const previousUrl = editor.getAttributes("link").href
-    const url = window.prompt("URL", previousUrl)
-
-    if (url === null) return
-
-    if (url === "") {
-      editor.chain().focus().extendMarkRange("link").unsetLink().run()
-      return
-    }
-
-    // Check if the URL ends with an image extension
-    const isImageUrl = /\.(jpg|jpeg|png|gif|webp)$/i.test(url)
-
-    if (isImageUrl) {
-      // Insert as image
-      editor.chain().focus().setImage({ src: url }).run()
-    } else {
-      // Insert as link
-      editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run()
-    }
+    setUrlInput(previousUrl || "")
+    setUrlType("link")
+    setModalOpen(true)
   }
 
   const handleImageClick = () => {
-    if (!editor) return
+    setUrlInput("")
+    setUrlType("image")
+    setModalOpen(true)
+  }
 
-    const url = window.prompt("Image URL")
+  // Format the last saved time
+  const formatLastSaved = () => {
+    if (!lastSaved) return ""
 
-    if (url === null || url === "") return
+    const now = new Date()
+    const diffMs = now.getTime() - lastSaved.getTime()
+    const diffSec = Math.floor(diffMs / 1000)
 
-    editor.chain().focus().setImage({ src: url }).run()
+    if (diffSec < 60) return "just now"
+    if (diffSec < 3600) return `${Math.floor(diffSec / 60)} min ago`
+
+    return lastSaved.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
   }
 
   return (
     <div className="space-y-4">
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{urlType === "image" ? "Insert Image URL" : "Insert Link URL"}</DialogTitle>
+          </DialogHeader>
+          <Input value={urlInput} onChange={(e) => setUrlInput(e.target.value)} placeholder="https://example.com" />
+          <DialogFooter>
+            <Button
+              onClick={() => {
+                if (!editor) return
+                if (!urlInput.trim()) {
+                  setModalOpen(false)
+                  return
+                }
+
+                if (urlType === "image") {
+                  editor.chain().focus().setImage({ src: urlInput }).run()
+                } else {
+                  editor.chain().focus().extendMarkRange("link").setLink({ href: urlInput }).run()
+                }
+
+                setModalOpen(false)
+              }}
+            >
+              Insert
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* form */}
       <FormField
         control={form.control}
         name="title"
@@ -92,7 +203,14 @@ export function BlogContentEditor({ form }: { form: UseFormReturn<BlogFormValues
           <FormItem>
             <FormLabel>Title</FormLabel>
             <FormControl>
-              <Input placeholder="Enter blog title" {...field} />
+              <Input
+                placeholder="Enter blog title"
+                {...field}
+                onChange={(e) => {
+                  field.onChange(e)
+                  debouncedSave()
+                }}
+              />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -104,7 +222,22 @@ export function BlogContentEditor({ form }: { form: UseFormReturn<BlogFormValues
         name="content"
         render={() => (
           <FormItem>
-            <FormLabel>Content</FormLabel>
+            <div className="flex justify-between items-center">
+              <FormLabel>Content</FormLabel>
+              <div className="flex items-center gap-2">
+                {lastSaved && <span className="text-xs text-muted-foreground">Last saved: {formatLastSaved()}</span>}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleManualSave}
+                  className="flex items-center gap-1"
+                >
+                  <Save className="h-3.5 w-3.5" />
+                  <span>Save draft</span>
+                </Button>
+              </div>
+            </div>
             <FormControl>
               <div className="border rounded-md">
                 {editor && (
@@ -169,10 +302,13 @@ export function BlogContentEditor({ form }: { form: UseFormReturn<BlogFormValues
               </div>
             </FormControl>
             <FormMessage />
-            <p className="text-sm text-muted-foreground mt-2">
-              Tip: Any link that ends with an image extension (.jpg, .png, etc.) will be automatically rendered as an
-              image.
-            </p>
+            <div className="flex flex-col gap-1 mt-2">
+              <p className="text-sm text-muted-foreground">
+                Tip: Any link that ends with an image extension (.jpg, .png, etc.) will be automatically rendered as an
+                image.
+              </p>
+              <p className="text-sm text-muted-foreground">Your draft is automatically saved as you type.</p>
+            </div>
           </FormItem>
         )}
       />

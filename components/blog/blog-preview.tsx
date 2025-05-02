@@ -77,20 +77,7 @@ export function BlogPreview({ blogData }: { blogData: BlogFormValues }) {
 
         {/* Blog Metadata */}
         <div className="pt-6 border-t space-y-4">
-          {/* Related Products */}
-          {blogData.product_codes && blogData.product_codes.length > 0 && (
-            <div>
-              <h3 className="text-lg font-medium mb-2">Related Products</h3>
-              <div className="flex flex-wrap gap-2">
-                {blogData.product_codes.map((code) => (
-                  <Badge key={code} variant="secondary">
-                    Product {code}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-
+         
           {/* Related Brands */}
           {blogData.brands && blogData.brands.length > 0 && (
             <div>
@@ -118,6 +105,22 @@ export function BlogPreview({ blogData }: { blogData: BlogFormValues }) {
               </div>
             </div>
           )}
+
+
+           {/* Related Products */}
+           {blogData.product_codes && blogData.product_codes.length > 0 && (
+            <div>
+              <h3 className="text-lg font-medium mb-2">Related Products</h3>
+              <div className="flex flex-wrap gap-2">
+                {blogData.product_codes.map((code) => (
+                  <Badge key={code} variant="secondary">
+                    Product {code}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
         </div>
       </div>
     </div>

@@ -10,16 +10,16 @@ import Link from "next/link";
 import {BlogCard} from "@/components/blog/blog-card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import {BlogPost} from '@/types/blog'
+import {Blog} from '@/types/blog'
 import {BlogCardtwo} from "@/components/blog/blogCardtwo"
 import axios from "axios";
 
 export default function BlogPage() {
   const { toast } = useToast();
-  const [blogs, setBlogs] = useState<BlogPost[]>([]);
-  const [filteredBlogs, setFilteredBlogs] = useState<BlogPost[]>([]);
+  const [blogs, setBlogs] = useState<Blog[]>([]);
+  const [filteredBlogs, setFilteredBlogs] = useState<Blog[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedBlog, setSelectedBlog] = useState<BlogPost | null>(null);
+  const [selectedBlog, setSelectedBlog] = useState<Blog| null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
 
@@ -30,7 +30,7 @@ export default function BlogPage() {
   useEffect(() => {
     const fetchBlogs = async () => {
       try {
-        const response = await axios.get("https://web.pharmaplus.co.ke/ecmws/read_blogs/fetch",
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/ecmws/read_blogs/fetch`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -66,7 +66,7 @@ export default function BlogPage() {
         (blog) =>
           blog.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
           blog.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          blog.tags.some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+          blog.tags.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
       );
       setFilteredBlogs(filtered);
     } else {

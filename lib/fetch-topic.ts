@@ -15,7 +15,7 @@ export const FetchTopics = async (): Promise<TopicItem[]> => {
   const password = process.env.BASIC_AUTH_PASS!;
   const authHeader = `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`;
 
-  const response = await axios.get("https://web.pharmaplus.co.ke/ecmws/read_blog_topic/fetch", {
+  const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/read_blog_topic/fetch`, {
     headers: {
       "Content-Type": "application/json",
       Authorization: authHeader,
