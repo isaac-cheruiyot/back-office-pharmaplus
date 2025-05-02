@@ -30,7 +30,7 @@ export default function BlogPage() {
   useEffect(() => {
     const fetchBlogs = async () => {
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/ecmws/read_blogs/fetch`,
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/read_blogs/fetch`,
           {
             headers: {
               "Content-Type": "application/json",
